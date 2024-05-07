@@ -4,19 +4,24 @@ import copy
 from gepu import Population, Terminal, Function
 
 def roulette_wheel(population):
-    # calculate total and cumulative fitness of the population
-    total = np.sum(individual.fitness for individual in population.individuals)
-    cumulative = np.cumsum([individual.fitness / total for individual in population.individuals])
+    """ roulette wheel selection based on fitness """
+    total_fitness = np.sum([individual.fitness for individual in population.individuals])
+    selected_individuals = []
+    elites = [individual for individual in population.individuals if individual.elite]
 
     # spin the wheel
-    selected_individuals = []
-    for _ in range(population.n):
-        r = np.random.rand()
-        selected_individual = next(individual for individual, cf in zip(population.individuals, cumulative) if r <= cf)
-        selected_individuals.append(copy.deepcopy(selected_individual))
+    for _ in range(population.n - len(elites)):
+        choice = np.random.uniform(0, total_fitness)
+        i = 0
+        for individual in population.individuals:
+            i += individual.fitness
+            if i >= choice:
+                selected_individuals.append(copy.deepcopy(individual))
+                break
 
     selected_population = Population()
-    selected_population.individuals = selected_individuals
+    selected_population.individuals = elites
+    selected_population.individuals += selected_individuals
     selected_population.n = population.n
     selected_population.pset = population.pset
     selected_population.head_length = population.head_length

@@ -113,9 +113,10 @@ class Gene:
         return kexpr[0] if isinstance(kexpr[0], str) else kexpr[0].format()
 
 class Individual:
-    def __init__(self, pset, head_length):
+    def __init__(self, pset, head_length, elite=False):
         self.gene = Gene(pset, head_length)
         self.fitness = .1
+        self.elite = elite
 
     def __str__(self):
         return str(self.gene)
