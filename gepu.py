@@ -115,6 +115,7 @@ class Gene:
 class Individual:
     def __init__(self, pset, head_length):
         self.gene = Gene(pset, head_length)
+        self.fitness = .1
 
     def __str__(self):
         return str(self.gene)

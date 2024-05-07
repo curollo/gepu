@@ -3,10 +3,17 @@ import numpy as np
 import copy
 from gepu import Population, Terminal
 
-def random_select(population):
-    # random selection of individuals
-    selected_individuals = np.random.choice(population.individuals, population.n, replace=False)
-    selected_individuals = [copy.deepcopy(individual) for individual in selected_individuals]
+def roulette_wheel(population):
+    # calculate total and cumulative fitness of the population
+    total = np.sum(individual.fitness for individual in population.individuals)
+    cumulative = np.cumsum([individual.fitness / total for individual in population.individuals])
+
+    # spin the wheel
+    selected_individuals = []
+    for _ in range(population.n):
+        r = np.random.rand()
+        selected_individual = next(individual for individual, cf in zip(population.individuals, cumulative) if r <= cf)
+        selected_individuals.append(copy.deepcopy(selected_individual))
 
     selected_population = Population()
     selected_population.individuals = selected_individuals
@@ -36,6 +43,6 @@ def mutate(population, mutations_per_individual=2):
 
 def get_next_generation(population):
     # user evaluates fitness
-    selected_population = random_select(population)
+    selected_population = roulette_wheel(population)
     mutate(selected_population)
     return selected_population
