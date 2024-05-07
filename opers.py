@@ -23,7 +23,7 @@ def roulette_wheel(population):
     return(selected_population)
 
 def mutate(population, mutations_per_individual=2):
-    # basic mutation of primitives
+    """ basic mutation of primitives """
     pset = population.pset
     head_length = population.head_length
     arity = 2
@@ -41,8 +41,19 @@ def mutate(population, mutations_per_individual=2):
                 # mutate terminals in the tail
                 individual.gene.genome[mutation_index] = Terminal(np.random.random())
 
+def invert(population):
+    """ invert part of genome """
+    head_length = population.head_length
+    if head_length > 2:
+        selected_individuals = np.random.choice(population.individuals, size=int(.1 * population.n), replace=False)
+        for individual in selected_individuals:
+            start = np.random.randint(0, head_length - 2)
+            stop = np.random.randint(start+1, head_length)
+            individual.gene.genome[start: stop+1] = reversed(individual.gene.genome[start: stop+1])
+
 def get_next_generation(population):
     # user evaluates fitness
     selected_population = roulette_wheel(population)
     mutate(selected_population)
+    invert(selected_population)
     return selected_population
