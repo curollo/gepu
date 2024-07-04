@@ -117,6 +117,8 @@ class Individual:
         self.gene = Gene(pset, head_length)
         self.fitness = .1
         self.elite = elite
+        self.a = None
+        self.b = None
 
     def __str__(self):
         return str(self.gene)
