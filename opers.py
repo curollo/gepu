@@ -6,18 +6,21 @@ from gepu import Population, Terminal, Function
 def roulette_wheel(population):
     """ roulette wheel selection based on fitness """
     total_fitness = np.sum([individual.fitness for individual in population.individuals])
+
+    # normalize the fitness values and calculate cumulative sum
+    normalized_fitness = [individual.fitness / total_fitness for individual in population.individuals]
+    cumulative_sum = np.cumsum(normalized_fitness)
+
     selected_individuals = []
     elites = [individual for individual in population.individuals if individual.elite]
 
     # spin the wheel
     for _ in range(population.n - len(elites)):
-        choice = np.random.uniform(0, total_fitness)
-        i = 0
-        for individual in population.individuals:
-            i += individual.fitness
-            if i >= choice:
-                selected_individuals.append(copy.deepcopy(individual))
-                break
+        choice = np.random.uniform(0, 1)
+
+        # select an individual based on the cumulative sum of the normalized fitness values
+        norm_selection = np.searchsorted(cumulative_sum, choice, side='right')
+        selected_individuals.append(copy.deepcopy(population.individuals[norm_selection]))
 
     selected_population = Population()
     selected_population.individuals = elites
@@ -39,13 +42,13 @@ def mutate(population, mutations_per_individual=2):
                 if np.random.random() < 0.5:
                     individual.gene.genome[mutation_index] = np.random.choice(population.pset.functions)
                 else:
-                    individual.gene.genome[mutation_index] = Terminal(np.random.random())
+                    individual.gene.genome[mutation_index] = Terminal(np.random.randint(-10, 10))
             else:
                 # mutate terminals in the tail
-                individual.gene.genome[mutation_index] = Terminal(np.random.random())
+                individual.gene.genome[mutation_index] = Terminal(np.random.randint(-10, 10))
 
 def invert(population, p=.1):
-    """ invert part of genome """ 
+    """ invert part of genome """
     if population.head_length > 2:
         selected_individuals = np.random.choice(population.individuals, size=int(p * population.n), replace=False)
         for individual in selected_individuals:
@@ -82,7 +85,7 @@ def get_gene_len(population):
     tail_length = head_length * (arity - 1) + 1
     return head_length + tail_length
 
-def onep_recombine(population, p=.1):
+def onep_recombine(population, p=.3):
     """ one point recombination """
     gene_length = get_gene_len(population)
     parents = np.random.choice(population.individuals, size=int(p * population.n), replace=False)
@@ -93,10 +96,10 @@ def onep_recombine(population, p=.1):
             parent2.gene.genome[recomb_point:], parent1.gene.genome[recomb_point:]
         )
 
-def twop_recombine(population, p=0.1):
+def twop_recombine(population, p=.2):
     """ two point recombination """
     gene_length = get_gene_len(population)
-    parents = np.random.choice(population.individuals, size=int(.1 * population.n), replace=False)
+    parents = np.random.choice(population.individuals, size=int(p * population.n), replace=False)
     for i in range(0, len(parents), 2):
         parent1, parent2 = parents[i], parents[i+1]
         recomb_point = np.random.randint(0, gene_length - 1)
